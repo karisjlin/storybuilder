@@ -15,6 +15,18 @@ export interface Story {
   updatedAt: string;
 }
 
+export interface Chapter {
+  id: string;
+  storyId: string;
+  title: string;
+  content: object | null;
+  order: number;
+  status: 'todo' | 'active' | 'done';
+  wordCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuthResponse {
   token: string;
   user: User;
