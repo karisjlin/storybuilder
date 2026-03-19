@@ -1,4 +1,10 @@
 export { User } from './User';
 export { Story } from './Story';
 export { Chapter } from './Chapter';
+export { Scene } from './Scene';
+export { Character } from './Character';
+export { CharacterRelationship } from './CharacterRelationship';
+export { WorldEntry } from './WorldEntry';
+export { Tag } from './Tag';
+export { TagAssignment } from './TagAssignment';
 export { default as sequelize } from '../config/database';
