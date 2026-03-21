@@ -23,10 +23,10 @@ export class Scene extends Model {
   @Column(DataType.STRING)
   declare title: string;
 
-  // TipTap JSON document — null until the user writes something
+  // Plain text content — stored as TEXT for the sticky note use case
   @AllowNull(true)
-  @Column(DataType.JSONB)
-  declare content: object | null;
+  @Column(DataType.TEXT)
+  declare content: string | null;
 
   // Integer position used for drag-and-drop reordering within the chapter
   @Default(0)

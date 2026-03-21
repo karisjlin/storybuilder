@@ -31,7 +31,7 @@ export interface Scene {
   id: string;
   chapterId: string;
   title: string;
-  content: object | null;
+  content: string | null;
   order: number;
   wordCount: number;
   createdAt: string;

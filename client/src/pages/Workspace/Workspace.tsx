@@ -1,18 +1,11 @@
 // Workspace — the main story editing page.
-// Layout: fixed top bar + left tab nav + panel content area.
+// Layout: top bar + tab nav + left sidebar (chapters) + main content area.
 //
-// Tabs:
-//  - Chapters: chapter list → scene list → TipTap scene editor
-//  - Characters: character profile cards + relationship map
-//  - World: world-building entries with category filtering
-//  - Tags: tag management + entity assignment
-//
-// Scene editing flow:
-//  1. Select a chapter in the sidebar → scenes load below it
-//  2. Select a scene → TipTap editor opens for that scene
-//  3. Content changes trigger 1.5s debounced auto-save
-//  4. Scenes can be reordered by dragging within the chapter
-import { useState, useEffect, useCallback, useRef } from 'react';
+// Chapters tab:
+//  - Sidebar: draggable chapter list
+//  - Main area: scenes for the active chapter displayed as sticky note cards
+//  - Cards can be dragged to reorder; each saves independently on content change
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
@@ -20,15 +13,14 @@ import {
 } from '@dnd-kit/core';
 import {
   SortableContext, sortableKeyboardCoordinates,
-  verticalListSortingStrategy, arrayMove,
+  verticalListSortingStrategy, rectSortingStrategy, arrayMove,
 } from '@dnd-kit/sortable';
 import { getStory } from '../../services/stories';
 import { getChapters, createChapter, updateChapter, deleteChapter, reorderChapters } from '../../services/chapters';
 import { getScenes, createScene, updateScene, deleteScene, reorderScenes } from '../../services/scenes';
 import { Story, Chapter, Scene } from '../../types';
 import SortableChapterItem from './SortableChapterItem';
-import SortableSceneItem from './SortableSceneItem';
-import RichTextEditor from '../../components/editor/RichTextEditor';
+import SceneCard from './SceneCard';
 import CharactersPanel from './CharactersPanel';
 import WorldPanel from './WorldPanel';
 import TagsPanel from './TagsPanel';
@@ -53,18 +45,13 @@ export default function Workspace() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   const [scenes, setScenes] = useState<Scene[]>([]);
-  const [activeScene, setActiveScene] = useState<Scene | null>(null);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('chapters');
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [newChapterTitle, setNewChapterTitle] = useState('');
   const [addingChapter, setAddingChapter] = useState(false);
-  const [newSceneTitle, setNewSceneTitle] = useState('');
   const [addingScene, setAddingScene] = useState(false);
+  const [newSceneTitle, setNewSceneTitle] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingContentRef = useRef<{ content: object; wordCount: number } | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -79,9 +66,7 @@ export default function Workspace() {
         const [s, chs] = await Promise.all([getStory(storyId!), getChapters(storyId!)]);
         setStory(s);
         setChapters(chs);
-        if (chs.length > 0) {
-          setActiveChapter(chs[0]);
-        }
+        if (chs.length > 0) setActiveChapter(chs[0]);
       } catch {
         navigate('/dashboard');
       } finally {
@@ -91,39 +76,13 @@ export default function Workspace() {
     load();
   }, [storyId, navigate]);
 
-  // Load scenes whenever the active chapter changes
+  // Load scenes when the active chapter changes
   useEffect(() => {
-    if (!activeChapter) { setScenes([]); setActiveScene(null); return; }
-    getScenes(activeChapter.id).then(s => {
-      setScenes(s);
-      setActiveScene(s.length > 0 ? s[0] : null);
-    });
+    if (!activeChapter) { setScenes([]); return; }
+    getScenes(activeChapter.id).then(setScenes);
   }, [activeChapter?.id]);
 
-  // Debounced auto-save — saves scene content 1.5s after the last keystroke
-  const handleContentChange = useCallback(
-    (content: object, wordCount: number) => {
-      if (!activeScene) return;
-      pendingContentRef.current = { content, wordCount };
-
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = setTimeout(async () => {
-        if (!pendingContentRef.current || !activeScene) return;
-        setSaving(true);
-        try {
-          const updated = await updateScene(activeScene.id, pendingContentRef.current);
-          setActiveScene(updated);
-          setScenes(prev => prev.map(s => s.id === updated.id ? updated : s));
-        } finally {
-          setSaving(false);
-          pendingContentRef.current = null;
-        }
-      }, 1500);
-    },
-    [activeScene]
-  );
-
-  // ── Chapter handlers ────────────────────────────────────────────────────────
+  // ── Chapter handlers ──────────────────────────────────────────────────────
 
   async function handleAddChapter(e: React.FormEvent) {
     e.preventDefault();
@@ -160,25 +119,31 @@ export default function Workspace() {
     await reorderChapters(storyId, reordered.map(c => ({ id: c.id, order: c.order })));
   }
 
-  // ── Scene handlers ──────────────────────────────────────────────────────────
+  // ── Scene handlers ────────────────────────────────────────────────────────
 
   async function handleAddScene(e: React.FormEvent) {
     e.preventDefault();
     if (!newSceneTitle.trim() || !activeChapter) return;
     const scene = await createScene(activeChapter.id, newSceneTitle.trim());
     setScenes(prev => [...prev, scene]);
-    setActiveScene(scene);
     setNewSceneTitle('');
     setAddingScene(false);
   }
 
   async function handleDeleteScene(id: string) {
     await deleteScene(id);
-    setScenes(prev => {
-      const updated = prev.filter(s => s.id !== id);
-      if (activeScene?.id === id) setActiveScene(updated[0] ?? null);
-      return updated;
-    });
+    setScenes(prev => prev.filter(s => s.id !== id));
+  }
+
+  // Called by SceneCard after the card's own 1s debounce fires
+  async function handleSceneContentChange(sceneId: string, content: string, wordCount: number) {
+    const updated = await updateScene(sceneId, { content, wordCount });
+    setScenes(prev => prev.map(s => s.id === updated.id ? updated : s));
+  }
+
+  async function handleSceneTitleChange(sceneId: string, title: string) {
+    const updated = await updateScene(sceneId, { title });
+    setScenes(prev => prev.map(s => s.id === updated.id ? updated : s));
   }
 
   async function handleSceneDragEnd(event: DragEndEvent) {
@@ -199,8 +164,7 @@ export default function Workspace() {
     );
   }
 
-  // Total word count across all scenes in the active chapter
-  const chapterWordCount = scenes.reduce((sum, s) => sum + s.wordCount, 0);
+  const totalWords = scenes.reduce((sum, s) => sum + s.wordCount, 0);
 
   return (
     <div className="min-h-screen bg-surface-900 flex flex-col">
@@ -234,9 +198,8 @@ export default function Workspace() {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          {saving && <span className="text-xs text-text-muted font-mono animate-pulse">Saving...</span>}
-          {!saving && activeTab === 'chapters' && activeChapter && chapterWordCount > 0 && (
-            <span className="text-xs text-text-muted font-mono">{chapterWordCount.toLocaleString()} words</span>
+          {activeTab === 'chapters' && totalWords > 0 && (
+            <span className="text-xs text-text-muted font-mono">{totalWords.toLocaleString()} words</span>
           )}
           {activeTab === 'chapters' && (
             <button
@@ -250,10 +213,9 @@ export default function Workspace() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* ── Sidebar (chapters tab only) ── */}
+        {/* ── Sidebar (chapters only) ── */}
         {activeTab === 'chapters' && sidebarOpen && (
           <aside className="w-64 bg-surface-800 border-r border-surface-600 flex flex-col shrink-0 overflow-hidden">
-            {/* Chapters header */}
             <div className="p-4 border-b border-surface-600 flex items-center justify-between shrink-0">
               <span className="text-xs font-mono text-text-muted uppercase tracking-wider">Chapters</span>
               <button
@@ -265,7 +227,6 @@ export default function Workspace() {
               </button>
             </div>
 
-            {/* New chapter form */}
             {addingChapter && (
               <form onSubmit={handleAddChapter} className="p-3 border-b border-surface-600 shrink-0">
                 <input
@@ -282,70 +243,23 @@ export default function Workspace() {
               </form>
             )}
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto py-2">
               {chapters.length === 0 ? (
                 <p className="text-text-muted text-sm text-center py-8 px-4 font-body">No chapters yet.</p>
               ) : (
-                /* Chapters drag context */
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChapterDragEnd}>
                   <SortableContext items={chapters.map(c => c.id)} strategy={verticalListSortingStrategy}>
                     {chapters.map(chapter => (
-                      <div key={chapter.id}>
-                        {/* Chapter row */}
-                        <SortableChapterItem
-                          chapter={chapter}
-                          isActive={activeChapter?.id === chapter.id}
-                          onSelect={() => setActiveChapter(chapter)}
-                          onDelete={() => handleDeleteChapter(chapter.id)}
-                          onStatusChange={status => handleChapterStatusChange(chapter, status)}
-                          statusColors={STATUS_COLORS}
-                          statusLabels={STATUS_LABELS}
-                        />
-
-                        {/* Scene list — shown only under the active chapter */}
-                        {activeChapter?.id === chapter.id && (
-                          <div className="bg-surface-800/50">
-                            {/* Scenes drag context — separate from chapters to avoid nesting conflicts */}
-                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSceneDragEnd}>
-                              <SortableContext items={scenes.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                                {scenes.map(scene => (
-                                  <SortableSceneItem
-                                    key={scene.id}
-                                    scene={scene}
-                                    isActive={activeScene?.id === scene.id}
-                                    onSelect={() => setActiveScene(scene)}
-                                    onDelete={() => handleDeleteScene(scene.id)}
-                                  />
-                                ))}
-                              </SortableContext>
-                            </DndContext>
-
-                            {/* Add scene form / button */}
-                            {addingScene ? (
-                              <form onSubmit={handleAddScene} className="pl-8 pr-3 py-2">
-                                <input
-                                  autoFocus
-                                  value={newSceneTitle}
-                                  onChange={e => setNewSceneTitle(e.target.value)}
-                                  placeholder="Scene title..."
-                                  className="w-full bg-surface-700 text-text-primary text-xs px-2 py-1.5 rounded border border-surface-500 focus:border-accent-green focus:outline-none font-body"
-                                />
-                                <div className="flex gap-1 mt-1.5">
-                                  <button type="submit" className="flex-1 bg-accent-green text-white text-xs py-1 rounded font-body hover:bg-green-600 transition-colors">Add</button>
-                                  <button type="button" onClick={() => { setAddingScene(false); setNewSceneTitle(''); }} className="flex-1 bg-surface-600 text-text-muted text-xs py-1 rounded font-body hover:bg-surface-500 transition-colors">Cancel</button>
-                                </div>
-                              </form>
-                            ) : (
-                              <button
-                                onClick={() => setAddingScene(true)}
-                                className="w-full pl-8 pr-3 py-2 text-left text-xs text-surface-500 hover:text-accent-green transition-colors font-body"
-                              >
-                                + Add scene
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      <SortableChapterItem
+                        key={chapter.id}
+                        chapter={chapter}
+                        isActive={activeChapter?.id === chapter.id}
+                        onSelect={() => setActiveChapter(chapter)}
+                        onDelete={() => handleDeleteChapter(chapter.id)}
+                        onStatusChange={status => handleChapterStatusChange(chapter, status)}
+                        statusColors={STATUS_COLORS}
+                        statusLabels={STATUS_LABELS}
+                      />
                     ))}
                   </SortableContext>
                 </DndContext>
@@ -357,76 +271,87 @@ export default function Workspace() {
         {/* ── Main Content Area ── */}
         <main className="flex-1 flex flex-col overflow-hidden">
           {activeTab === 'chapters' && (
-            <>
-              {activeScene ? (
-                <>
-                  {/* Header: chapter name (read-only label) + scene title (editable) + chapter status */}
-                  <div className="px-8 py-5 border-b border-surface-700 shrink-0">
-                    <p className="text-xs font-mono text-text-muted mb-1 uppercase tracking-wider">
-                      {activeChapter?.title}
-                    </p>
-                    <div className="flex items-center gap-4">
-                      <input
-                        type="text"
-                        value={activeScene.title}
-                        onChange={e => {
-                          const title = e.target.value;
-                          setActiveScene(prev => prev ? { ...prev, title } : prev);
-                        }}
-                        onBlur={async e => {
-                          const updated = await updateScene(activeScene.id, { title: e.target.value });
-                          setScenes(prev => prev.map(s => s.id === updated.id ? updated : s));
-                        }}
-                        className="font-heading text-2xl font-bold text-text-primary bg-transparent border-none outline-none flex-1"
-                      />
-                      {/* Chapter status selector */}
-                      {activeChapter && (
-                        <select
-                          value={activeChapter.status}
-                          onChange={e => handleChapterStatusChange(activeChapter, e.target.value as Chapter['status'])}
-                          className={`text-sm font-mono bg-surface-700 border border-surface-500 rounded-lg px-3 py-1.5 focus:outline-none focus:border-accent-green ${STATUS_COLORS[activeChapter.status]}`}
-                        >
-                          {Object.entries(STATUS_LABELS).map(([val, label]) => (
-                            <option key={val} value={val}>{label}</option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-                  </div>
+            activeChapter ? (
+              <>
+                {/* Chapter header + add scene button */}
+                <div className="px-8 py-5 border-b border-surface-700 flex items-center gap-4 shrink-0">
+                  <h2 className="font-heading text-xl font-bold text-text-primary flex-1">
+                    {activeChapter.title}
+                  </h2>
+                  <select
+                    value={activeChapter.status}
+                    onChange={e => handleChapterStatusChange(activeChapter, e.target.value as Chapter['status'])}
+                    className={`text-sm font-mono bg-surface-700 border border-surface-500 rounded-lg px-3 py-1.5 focus:outline-none focus:border-accent-green ${STATUS_COLORS[activeChapter.status]}`}
+                  >
+                    {Object.entries(STATUS_LABELS).map(([val, label]) => (
+                      <option key={val} value={val}>{label}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => setAddingScene(true)}
+                    className="bg-accent-green text-white text-sm px-4 py-1.5 rounded-lg font-body hover:bg-green-600 transition-colors"
+                  >
+                    + Add Scene
+                  </button>
+                </div>
 
-                  {/* TipTap editor — keyed by scene ID so a fresh instance mounts per scene */}
-                  <div className="flex-1 overflow-y-auto px-8 py-6">
-                    <RichTextEditor
-                      key={activeScene.id}
-                      content={activeScene.content}
-                      onChange={handleContentChange}
+                {/* Inline add scene form */}
+                {addingScene && (
+                  <form onSubmit={handleAddScene} className="px-8 py-3 border-b border-surface-700 flex items-center gap-3 shrink-0 bg-surface-800/50">
+                    <input
+                      autoFocus
+                      value={newSceneTitle}
+                      onChange={e => setNewSceneTitle(e.target.value)}
+                      placeholder="Scene title..."
+                      className="bg-surface-700 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body w-64"
                     />
-                  </div>
-                </>
-              ) : activeChapter ? (
-                /* Chapter selected but no scenes yet */
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="font-heading text-2xl font-bold text-text-muted mb-2">{activeChapter.title}</p>
-                    <p className="text-text-muted font-body text-sm mb-4">No scenes yet. Add a scene in the sidebar to start writing.</p>
-                    <button
-                      onClick={() => setAddingScene(true)}
-                      className="bg-accent-green text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-green-600 transition-colors"
-                    >
-                      + Add First Scene
-                    </button>
-                  </div>
+                    <button type="submit" className="bg-accent-green text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-green-600 transition-colors">Add</button>
+                    <button type="button" onClick={() => { setAddingScene(false); setNewSceneTitle(''); }} className="bg-surface-600 text-text-muted text-sm px-4 py-2 rounded-lg font-body hover:bg-surface-500 transition-colors">Cancel</button>
+                  </form>
+                )}
+
+                {/* Sticky note grid */}
+                <div className="flex-1 overflow-y-auto p-8">
+                  {scenes.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <p className="font-heading text-xl font-bold text-text-muted mb-2">No scenes yet</p>
+                        <p className="text-text-muted font-body text-sm mb-4">Add a scene to start writing.</p>
+                        <button
+                          onClick={() => setAddingScene(true)}
+                          className="bg-accent-green text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-green-600 transition-colors"
+                        >
+                          + Add First Scene
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSceneDragEnd}>
+                      <SortableContext items={scenes.map(s => s.id)} strategy={rectSortingStrategy}>
+                        <div className="flex flex-wrap gap-5">
+                          {scenes.map(scene => (
+                            <SceneCard
+                              key={scene.id}
+                              scene={scene}
+                              onDelete={() => handleDeleteScene(scene.id)}
+                              onTitleChange={title => handleSceneTitleChange(scene.id, title)}
+                              onContentChange={(content, wordCount) => handleSceneContentChange(scene.id, content, wordCount)}
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  )}
                 </div>
-              ) : (
-                /* No chapter selected */
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="font-heading text-2xl font-bold text-text-muted mb-2">No chapter selected</p>
-                    <p className="text-text-muted font-body text-sm">Add a chapter from the sidebar to get started.</p>
-                  </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="font-heading text-2xl font-bold text-text-muted mb-2">No chapter selected</p>
+                  <p className="text-text-muted font-body text-sm">Add a chapter from the sidebar to get started.</p>
                 </div>
-              )}
-            </>
+              </div>
+            )
           )}
 
           {activeTab === 'characters' && storyId && <CharactersPanel storyId={storyId} />}
