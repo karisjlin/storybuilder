@@ -84,7 +84,7 @@ export default function WorldPanel({ storyId }: Props) {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-accent-orange border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-accent-green border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -96,7 +96,7 @@ export default function WorldPanel({ storyId }: Props) {
         <h2 className="font-heading font-bold text-text-primary text-lg">World Building</h2>
         <button
           onClick={() => { setShowForm(true); setEditing(null); setForm(INITIAL_FORM); }}
-          className="text-sm bg-accent-orange text-white px-3 py-1.5 rounded-lg font-body hover:bg-orange-500 transition-colors"
+          className="text-sm bg-accent-green text-white px-3 py-1.5 rounded-lg font-body hover:bg-green-600 transition-colors"
         >
           + Add Entry
         </button>
@@ -110,7 +110,7 @@ export default function WorldPanel({ storyId }: Props) {
             onClick={() => setFilter(cat.value)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono whitespace-nowrap transition-colors border ${
               filter === cat.value
-                ? 'bg-accent-orange text-white border-accent-orange'
+                ? 'bg-accent-green text-white border-accent-green'
                 : 'bg-surface-700 text-text-muted border-surface-600 hover:border-surface-400'
             }`}
           >
@@ -139,7 +139,7 @@ export default function WorldPanel({ storyId }: Props) {
                   required
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                  className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                 />
               </div>
               <div className="col-span-2 sm:col-span-1">
@@ -147,7 +147,7 @@ export default function WorldPanel({ storyId }: Props) {
                 <select
                   value={form.category}
                   onChange={e => setForm(f => ({ ...f, category: e.target.value as WorldCategory }))}
-                  className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                  className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                 >
                   {CATEGORIES.filter(c => c.value !== 'all').map(c => (
                     <option key={c.value} value={c.value}>{c.label}</option>
@@ -160,12 +160,12 @@ export default function WorldPanel({ storyId }: Props) {
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={3}
-                  className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body resize-none"
+                  className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body resize-none"
                 />
               </div>
             </div>
             <div className="flex gap-2 mt-4">
-              <button type="submit" className="bg-accent-orange text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-orange-500 transition-colors">
+              <button type="submit" className="bg-accent-green text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-green-600 transition-colors">
                 {editing ? 'Save Changes' : 'Create'}
               </button>
               <button

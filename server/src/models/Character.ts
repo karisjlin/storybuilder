@@ -30,6 +30,10 @@ export class Character extends Model {
   @Column(DataType.TEXT)
   declare bio: string | null;
 
+  @AllowNull(true)
+  @Column(DataType.INTEGER)
+  declare age: number | null;
+
   // URL to an uploaded or externally hosted avatar image
   @AllowNull(true)
   @Column(DataType.STRING)

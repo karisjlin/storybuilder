@@ -42,7 +42,7 @@ export default function SortableChapterItem({
       style={style}
       className={`group flex items-center gap-2 px-3 py-2.5 cursor-pointer transition-colors ${
         isActive
-          ? 'bg-surface-700 border-l-2 border-accent-orange'
+          ? 'bg-surface-700 border-l-2 border-accent-green'
           : 'hover:bg-surface-700/50 border-l-2 border-transparent'
       }`}
       onClick={onSelect}

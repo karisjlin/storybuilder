@@ -7,7 +7,7 @@ const config: Config = {
     extend: {
       colors: {
         accent: {
-          orange: '#FF6B35',
+          green: '#22C55E',
           red: '#E63946',
         },
         surface: {

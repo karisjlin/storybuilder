@@ -36,7 +36,7 @@ import TagsPanel from './TagsPanel';
 type WorkspaceTab = 'chapters' | 'characters' | 'world' | 'tags';
 
 const STATUS_LABELS = { todo: 'To Do', active: 'In Progress', done: 'Done' };
-const STATUS_COLORS = { todo: 'text-text-muted', active: 'text-accent-orange', done: 'text-green-400' };
+const STATUS_COLORS = { todo: 'text-text-muted', active: 'text-accent-green', done: 'text-green-400' };
 
 const TABS: { id: WorkspaceTab; label: string; icon: string }[] = [
   { id: 'chapters',   label: 'Chapters',   icon: '✍' },
@@ -194,7 +194,7 @@ export default function Workspace() {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-900 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-accent-orange border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-accent-green border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -258,7 +258,7 @@ export default function Workspace() {
               <span className="text-xs font-mono text-text-muted uppercase tracking-wider">Chapters</span>
               <button
                 onClick={() => setAddingChapter(true)}
-                className="text-accent-orange hover:text-orange-400 text-xl leading-none transition-colors"
+                className="text-accent-green hover:text-green-400 text-xl leading-none transition-colors"
                 title="Add chapter"
               >
                 +
@@ -273,10 +273,10 @@ export default function Workspace() {
                   value={newChapterTitle}
                   onChange={e => setNewChapterTitle(e.target.value)}
                   placeholder="Chapter title..."
-                  className="w-full bg-surface-700 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                  className="w-full bg-surface-700 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                 />
                 <div className="flex gap-2 mt-2">
-                  <button type="submit" className="flex-1 bg-accent-orange text-white text-xs py-1.5 rounded-lg font-body hover:bg-orange-500 transition-colors">Add</button>
+                  <button type="submit" className="flex-1 bg-accent-green text-white text-xs py-1.5 rounded-lg font-body hover:bg-green-600 transition-colors">Add</button>
                   <button type="button" onClick={() => { setAddingChapter(false); setNewChapterTitle(''); }} className="flex-1 bg-surface-600 text-text-muted text-xs py-1.5 rounded-lg font-body hover:bg-surface-500 transition-colors">Cancel</button>
                 </div>
               </form>
@@ -328,17 +328,17 @@ export default function Workspace() {
                                   value={newSceneTitle}
                                   onChange={e => setNewSceneTitle(e.target.value)}
                                   placeholder="Scene title..."
-                                  className="w-full bg-surface-700 text-text-primary text-xs px-2 py-1.5 rounded border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                                  className="w-full bg-surface-700 text-text-primary text-xs px-2 py-1.5 rounded border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                                 />
                                 <div className="flex gap-1 mt-1.5">
-                                  <button type="submit" className="flex-1 bg-accent-orange text-white text-xs py-1 rounded font-body hover:bg-orange-500 transition-colors">Add</button>
+                                  <button type="submit" className="flex-1 bg-accent-green text-white text-xs py-1 rounded font-body hover:bg-green-600 transition-colors">Add</button>
                                   <button type="button" onClick={() => { setAddingScene(false); setNewSceneTitle(''); }} className="flex-1 bg-surface-600 text-text-muted text-xs py-1 rounded font-body hover:bg-surface-500 transition-colors">Cancel</button>
                                 </div>
                               </form>
                             ) : (
                               <button
                                 onClick={() => setAddingScene(true)}
-                                className="w-full pl-8 pr-3 py-2 text-left text-xs text-surface-500 hover:text-accent-orange transition-colors font-body"
+                                className="w-full pl-8 pr-3 py-2 text-left text-xs text-surface-500 hover:text-accent-green transition-colors font-body"
                               >
                                 + Add scene
                               </button>
@@ -384,7 +384,7 @@ export default function Workspace() {
                         <select
                           value={activeChapter.status}
                           onChange={e => handleChapterStatusChange(activeChapter, e.target.value as Chapter['status'])}
-                          className={`text-sm font-mono bg-surface-700 border border-surface-500 rounded-lg px-3 py-1.5 focus:outline-none focus:border-accent-orange ${STATUS_COLORS[activeChapter.status]}`}
+                          className={`text-sm font-mono bg-surface-700 border border-surface-500 rounded-lg px-3 py-1.5 focus:outline-none focus:border-accent-green ${STATUS_COLORS[activeChapter.status]}`}
                         >
                           {Object.entries(STATUS_LABELS).map(([val, label]) => (
                             <option key={val} value={val}>{label}</option>
@@ -411,7 +411,7 @@ export default function Workspace() {
                     <p className="text-text-muted font-body text-sm mb-4">No scenes yet. Add a scene in the sidebar to start writing.</p>
                     <button
                       onClick={() => setAddingScene(true)}
-                      className="bg-accent-orange text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-orange-500 transition-colors"
+                      className="bg-accent-green text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-green-600 transition-colors"
                     >
                       + Add First Scene
                     </button>

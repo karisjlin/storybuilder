@@ -33,7 +33,7 @@ export default function RichTextEditor({ content, onChange, editable = true }: R
     extensions: [
       StarterKit,
       Placeholder.configure({
-        placeholder: 'Start writing your chapter...',
+        placeholder: 'Write your scene...',
       }),
     ],
     content: content || '',

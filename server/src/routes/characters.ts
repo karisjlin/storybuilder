@@ -37,13 +37,14 @@ router.post('/', authenticate, async (req: Request, res: Response): Promise<void
     const story = await verifyStoryOwnership(req.params.storyId, req.user!.id);
     if (!story) { res.status(403).json({ error: 'Forbidden' }); return; }
 
-    const { name, role, bio, imageUrl, traits } = req.body;
+    const { name, role, age, bio, imageUrl, traits } = req.body;
     if (!name) { res.status(400).json({ error: 'Name is required' }); return; }
 
     const character = await Character.create({
       storyId: req.params.storyId,
       name,
       role: role || null,
+      age: age != null ? Number(age) : null,
       bio: bio || null,
       imageUrl: imageUrl || null,
       traits: traits || [],
@@ -140,10 +141,11 @@ characterRouter.put('/:id', authenticate, async (req: Request, res: Response): P
     const character = await verifyCharacterOwnership(req.params.id, req.user!.id);
     if (!character) { res.status(404).json({ error: 'Character not found' }); return; }
 
-    const { name, role, bio, imageUrl, traits } = req.body;
+    const { name, role, age, bio, imageUrl, traits } = req.body;
     await character.update({
       ...(name !== undefined && { name }),
       ...(role !== undefined && { role }),
+      ...(age !== undefined && { age: age != null ? Number(age) : null }),
       ...(bio !== undefined && { bio }),
       ...(imageUrl !== undefined && { imageUrl }),
       ...(traits !== undefined && { traits }),

@@ -26,7 +26,7 @@ export default function Input({ label, error, id, className = '', ...props }: In
           'transition-colors duration-150',
           error
             ? 'border-accent-red focus:border-accent-red focus:ring-accent-red'
-            : 'border-surface-600 focus:border-accent-orange focus:ring-accent-orange',
+            : 'border-surface-600 focus:border-accent-green focus:ring-accent-green',
           'focus:outline-none focus:ring-1',
           className,
         ].join(' ')}

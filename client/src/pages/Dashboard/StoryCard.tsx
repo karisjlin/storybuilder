@@ -15,8 +15,8 @@ const statusConfig = {
   },
   in_progress: {
     label: 'In Progress',
-    classes: 'bg-accent-orange/20 text-accent-orange',
-    accentColor: 'bg-accent-orange',
+    classes: 'bg-accent-green/20 text-accent-green',
+    accentColor: 'bg-accent-green',
   },
   complete: {
     label: 'Complete',
@@ -69,7 +69,7 @@ export default function StoryCard({ story, onDelete }: StoryCardProps) {
 
         <div className="p-5 flex flex-col gap-3 h-full">
           {/* Title */}
-          <h3 className="font-heading text-lg font-bold text-text-primary leading-snug group-hover:text-accent-orange transition-colors duration-150 line-clamp-2">
+          <h3 className="font-heading text-lg font-bold text-text-primary leading-snug group-hover:text-accent-green transition-colors duration-150 line-clamp-2">
             {story.title}
           </h3>
 

@@ -94,7 +94,7 @@ export default function TagsPanel({ storyId }: Props) {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-accent-orange border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-accent-green border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -107,7 +107,7 @@ export default function TagsPanel({ storyId }: Props) {
           <span className="text-xs font-mono text-text-muted uppercase tracking-wider">Tags</span>
           <button
             onClick={() => setShowCreate(v => !v)}
-            className="text-accent-orange hover:text-orange-400 text-xl leading-none transition-colors"
+            className="text-accent-green hover:text-green-400 text-xl leading-none transition-colors"
           >
             +
           </button>
@@ -121,7 +121,7 @@ export default function TagsPanel({ storyId }: Props) {
               value={newTagName}
               onChange={e => setNewTagName(e.target.value)}
               placeholder="Tag name..."
-              className="w-full bg-surface-700 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body mb-2"
+              className="w-full bg-surface-700 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body mb-2"
             />
             <div className="flex flex-wrap gap-1.5 mb-2">
               {PRESET_COLORS.map(color => (
@@ -137,7 +137,7 @@ export default function TagsPanel({ storyId }: Props) {
               ))}
             </div>
             <div className="flex gap-2">
-              <button type="submit" className="flex-1 bg-accent-orange text-white text-xs py-1.5 rounded-lg font-body hover:bg-orange-500 transition-colors">
+              <button type="submit" className="flex-1 bg-accent-green text-white text-xs py-1.5 rounded-lg font-body hover:bg-green-600 transition-colors">
                 Create
               </button>
               <button type="button" onClick={() => setShowCreate(false)} className="flex-1 bg-surface-600 text-text-muted text-xs py-1.5 rounded-lg font-body hover:bg-surface-500 transition-colors">
@@ -158,7 +158,7 @@ export default function TagsPanel({ storyId }: Props) {
                 onClick={() => setSelectedTag(tag)}
                 className={`group flex items-center gap-2 px-3 py-2.5 cursor-pointer transition-colors ${
                   selectedTag?.id === tag.id
-                    ? 'bg-surface-700 border-l-2 border-accent-orange'
+                    ? 'bg-surface-700 border-l-2 border-accent-green'
                     : 'hover:bg-surface-700/50 border-l-2 border-transparent'
                 }`}
               >
@@ -211,7 +211,7 @@ export default function TagsPanel({ storyId }: Props) {
                           type="checkbox"
                           checked={assigned}
                           onChange={() => toggleAssignment(selectedTag, ch.id, 'chapter')}
-                          className="accent-accent-orange"
+                          className="accent-accent-green"
                         />
                         <span className="text-sm font-body text-text-primary">{ch.title}</span>
                         {assigned && (
@@ -239,7 +239,7 @@ export default function TagsPanel({ storyId }: Props) {
                           type="checkbox"
                           checked={assigned}
                           onChange={() => toggleAssignment(selectedTag, char.id, 'character')}
-                          className="accent-accent-orange"
+                          className="accent-accent-green"
                         />
                         <span className="text-sm font-body text-text-primary">{char.name}</span>
                         {char.role && <span className="text-xs text-text-muted font-mono">{char.role}</span>}
@@ -268,7 +268,7 @@ export default function TagsPanel({ storyId }: Props) {
                           type="checkbox"
                           checked={assigned}
                           onChange={() => toggleAssignment(selectedTag, entry.id, 'worldEntry')}
-                          className="accent-accent-orange"
+                          className="accent-accent-green"
                         />
                         <span className="text-sm font-body text-text-primary">{entry.name}</span>
                         <span className="text-xs text-text-muted font-mono">{entry.category}</span>

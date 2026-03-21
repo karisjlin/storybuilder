@@ -38,7 +38,7 @@
 }
 
 .ProseMirror blockquote {
-  @apply border-l-4 border-accent-orange pl-4 italic text-text-muted my-4;
+  @apply border-l-4 border-accent-green pl-4 italic text-text-muted my-4;
 }
 
 .ProseMirror ul {

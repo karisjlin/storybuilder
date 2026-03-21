@@ -12,7 +12,7 @@ interface Props {
   storyId: string;
 }
 
-const INITIAL_FORM = { name: '', role: '', bio: '', imageUrl: '', traits: '' };
+const INITIAL_FORM = { name: '', role: '', age: '', bio: '', imageUrl: '', traits: '' };
 
 export default function CharactersPanel({ storyId }: Props) {
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -45,6 +45,7 @@ export default function CharactersPanel({ storyId }: Props) {
     const char = await createCharacter(storyId, {
       name: form.name,
       role: form.role || null,
+      age: form.age ? parseInt(form.age) : null,
       bio: form.bio || null,
       imageUrl: form.imageUrl || null,
       traits,
@@ -61,6 +62,7 @@ export default function CharactersPanel({ storyId }: Props) {
     const updated = await updateCharacter(selected.id, {
       name: form.name,
       role: form.role || null,
+      age: form.age ? parseInt(form.age) : null,
       bio: form.bio || null,
       imageUrl: form.imageUrl || null,
       traits,
@@ -81,6 +83,7 @@ export default function CharactersPanel({ storyId }: Props) {
     setForm({
       name: char.name,
       role: char.role || '',
+      age: char.age != null ? String(char.age) : '',
       bio: char.bio || '',
       imageUrl: char.imageUrl || '',
       traits: char.traits.join(', '),
@@ -109,7 +112,7 @@ export default function CharactersPanel({ storyId }: Props) {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-accent-orange border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-accent-green border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -124,7 +127,7 @@ export default function CharactersPanel({ storyId }: Props) {
             onClick={() => setTab(t)}
             className={`pb-3 text-sm font-body capitalize border-b-2 transition-colors ${
               tab === t
-                ? 'border-accent-orange text-text-primary'
+                ? 'border-accent-green text-text-primary'
                 : 'border-transparent text-text-muted hover:text-text-primary'
             }`}
           >
@@ -135,14 +138,14 @@ export default function CharactersPanel({ storyId }: Props) {
           {tab === 'cards' ? (
             <button
               onClick={() => { setShowForm(true); setForm(INITIAL_FORM); }}
-              className="text-sm bg-accent-orange text-white px-3 py-1 rounded-lg font-body hover:bg-orange-500 transition-colors"
+              className="text-sm bg-accent-green text-white px-3 py-1 rounded-lg font-body hover:bg-green-600 transition-colors"
             >
               + Add Character
             </button>
           ) : (
             <button
               onClick={() => setShowRelForm(true)}
-              className="text-sm bg-accent-orange text-white px-3 py-1 rounded-lg font-body hover:bg-orange-500 transition-colors"
+              className="text-sm bg-accent-green text-white px-3 py-1 rounded-lg font-body hover:bg-green-600 transition-colors"
             >
               + Add Relationship
             </button>
@@ -169,7 +172,7 @@ export default function CharactersPanel({ storyId }: Props) {
                       required
                       value={form.name}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                     />
                   </div>
                   <div className="col-span-2 sm:col-span-1">
@@ -178,7 +181,18 @@ export default function CharactersPanel({ storyId }: Props) {
                       value={form.role}
                       onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
                       placeholder="e.g. Protagonist, Villain"
-                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
+                    />
+                  </div>
+                  <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-xs text-text-muted font-mono mb-1">Age</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.age}
+                      onChange={e => setForm(f => ({ ...f, age: e.target.value }))}
+                      placeholder="e.g. 34"
+                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                     />
                   </div>
                   <div className="col-span-2">
@@ -187,7 +201,7 @@ export default function CharactersPanel({ storyId }: Props) {
                       value={form.bio}
                       onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
                       rows={3}
-                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body resize-none"
+                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body resize-none"
                     />
                   </div>
                   <div className="col-span-2 sm:col-span-1">
@@ -196,7 +210,7 @@ export default function CharactersPanel({ storyId }: Props) {
                       value={form.imageUrl}
                       onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
                       placeholder="https://..."
-                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                     />
                   </div>
                   <div className="col-span-2 sm:col-span-1">
@@ -205,12 +219,12 @@ export default function CharactersPanel({ storyId }: Props) {
                       value={form.traits}
                       onChange={e => setForm(f => ({ ...f, traits: e.target.value }))}
                       placeholder="brave, stubborn, witty"
-                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                     />
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <button type="submit" className="bg-accent-orange text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-orange-500 transition-colors">
+                  <button type="submit" className="bg-accent-green text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-green-600 transition-colors">
                     {editMode ? 'Save Changes' : 'Create'}
                   </button>
                   <button
@@ -252,8 +266,10 @@ export default function CharactersPanel({ storyId }: Props) {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <h3 className="font-heading font-bold text-text-primary">{char.name}</h3>
-                          {char.role && (
-                            <p className="text-xs text-accent-orange font-mono mt-0.5">{char.role}</p>
+                          {(char.role || char.age != null) && (
+                            <p className="text-xs text-accent-green font-mono mt-0.5">
+                              {char.role}{char.role && char.age != null ? ' · ' : ''}{char.age != null ? `Age ${char.age}` : ''}
+                            </p>
                           )}
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -310,7 +326,7 @@ export default function CharactersPanel({ storyId }: Props) {
                       required
                       value={relForm.characterAId}
                       onChange={e => setRelForm(f => ({ ...f, characterAId: e.target.value }))}
-                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                     >
                       <option value="">Select character...</option>
                       {characters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -322,7 +338,7 @@ export default function CharactersPanel({ storyId }: Props) {
                       required
                       value={relForm.characterBId}
                       onChange={e => setRelForm(f => ({ ...f, characterBId: e.target.value }))}
-                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                     >
                       <option value="">Select character...</option>
                       {characters.filter(c => c.id !== relForm.characterAId).map(c => (
@@ -337,7 +353,7 @@ export default function CharactersPanel({ storyId }: Props) {
                       value={relForm.type}
                       onChange={e => setRelForm(f => ({ ...f, type: e.target.value }))}
                       placeholder="rivals, siblings, mentor/student..."
-                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                     />
                   </div>
                   <div>
@@ -346,12 +362,12 @@ export default function CharactersPanel({ storyId }: Props) {
                       value={relForm.description}
                       onChange={e => setRelForm(f => ({ ...f, description: e.target.value }))}
                       placeholder="Optional note..."
-                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-orange focus:outline-none font-body"
+                      className="w-full bg-surface-800 text-text-primary text-sm px-3 py-2 rounded-lg border border-surface-500 focus:border-accent-green focus:outline-none font-body"
                     />
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <button type="submit" className="bg-accent-orange text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-orange-500 transition-colors">
+                  <button type="submit" className="bg-accent-green text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-green-600 transition-colors">
                     Create
                   </button>
                   <button type="button" onClick={() => setShowRelForm(false)} className="bg-surface-600 text-text-muted text-sm px-4 py-2 rounded-lg font-body hover:bg-surface-500 transition-colors">
@@ -383,7 +399,7 @@ export default function CharactersPanel({ storyId }: Props) {
 
                     {/* Relationship type */}
                     <div className="flex-1 text-center">
-                      <span className="text-sm font-mono text-accent-orange bg-surface-800 px-3 py-1 rounded-full border border-surface-600">
+                      <span className="text-sm font-mono text-accent-green bg-surface-800 px-3 py-1 rounded-full border border-surface-600">
                         {rel.type}
                       </span>
                       {rel.description && (

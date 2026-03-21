@@ -28,7 +28,7 @@ export default function SortableSceneItem({ scene, isActive, onSelect, onDelete 
       style={style}
       className={`group flex items-center gap-2 pl-8 pr-3 py-2 cursor-pointer transition-colors ${
         isActive
-          ? 'bg-surface-600 border-l-2 border-accent-orange'
+          ? 'bg-surface-600 border-l-2 border-accent-green'
           : 'hover:bg-surface-700/50 border-l-2 border-transparent'
       }`}
       onClick={onSelect}

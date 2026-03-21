@@ -130,7 +130,7 @@ export default function Dashboard() {
       <header className="bg-surface-800 border-b border-surface-600 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="font-heading text-2xl font-black text-text-primary tracking-tight">
-            Story<span className="text-accent-orange">Forge</span>
+            Story<span className="text-accent-green">Forge</span>
           </h1>
 
           <div className="flex items-center gap-4">
@@ -258,7 +258,7 @@ export default function Dashboard() {
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   rows={3}
-                  className="w-full rounded-lg px-4 py-2.5 text-sm font-body bg-surface-700 border border-surface-600 text-text-primary placeholder-text-muted focus:outline-none focus:border-accent-orange focus:ring-1 focus:ring-accent-orange transition-colors duration-150 resize-none"
+                  className="w-full rounded-lg px-4 py-2.5 text-sm font-body bg-surface-700 border border-surface-600 text-text-primary placeholder-text-muted focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green transition-colors duration-150 resize-none"
                 />
               </div>
 
@@ -271,7 +271,7 @@ export default function Dashboard() {
                   onChange={(e) =>
                     setForm({ ...form, status: e.target.value as Story['status'] })
                   }
-                  className="w-full rounded-lg px-4 py-2.5 text-sm font-body bg-surface-700 border border-surface-600 text-text-primary focus:outline-none focus:border-accent-orange focus:ring-1 focus:ring-accent-orange transition-colors duration-150"
+                  className="w-full rounded-lg px-4 py-2.5 text-sm font-body bg-surface-700 border border-surface-600 text-text-primary focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green transition-colors duration-150"
                 >
                   <option value="draft">Draft</option>
                   <option value="in_progress">In Progress</option>

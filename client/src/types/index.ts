@@ -43,6 +43,7 @@ export interface Character {
   storyId: string;
   name: string;
   role: string | null;
+  age: number | null;
   bio: string | null;
   imageUrl: string | null;
   traits: string[];

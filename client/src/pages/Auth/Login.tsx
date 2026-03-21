@@ -37,7 +37,7 @@ export default function Login() {
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="font-heading text-4xl font-black text-text-primary tracking-tight">
-            Story<span className="text-accent-orange">Forge</span>
+            Story<span className="text-accent-green">Forge</span>
           </h1>
           <p className="mt-2 text-text-muted font-body text-sm">
             Your creative writing workspace
@@ -91,7 +91,7 @@ export default function Login() {
             Don't have an account?{' '}
             <Link
               to="/register"
-              className="text-accent-orange hover:underline font-medium"
+              className="text-accent-green hover:underline font-medium"
             >
               Create one
             </Link>
