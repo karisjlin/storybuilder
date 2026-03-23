@@ -47,12 +47,14 @@ chapterRouter.put('/:id', authenticate, async (req: Request, res: Response): Pro
     const chapter = await verifyChapterOwnership(req.params.id, req.user!.id);
     if (!chapter) { res.status(404).json({ error: 'Chapter not found' }); return; }
 
-    const { title, content, status, wordCount } = req.body;
+    const { title, content, status, wordCount, finalContent, finalWordCount } = req.body;
     await chapter.update({
       ...(title !== undefined && { title }),
       ...(content !== undefined && { content }),
       ...(status !== undefined && { status }),
       ...(wordCount !== undefined && { wordCount }),
+      ...(finalContent !== undefined && { finalContent }),
+      ...(finalWordCount !== undefined && { finalWordCount }),
     });
     res.json(chapter);
   } catch (err) {

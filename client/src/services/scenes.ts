@@ -29,3 +29,23 @@ export async function reorderScenes(
 ): Promise<void> {
   await api.put(`/chapters/${chapterId}/scenes/reorder`, { scenes });
 }
+
+export async function assignCharacter(sceneId: string, characterId: string): Promise<Scene> {
+  const res = await api.post<Scene>(`/scenes/${sceneId}/characters/${characterId}`);
+  return res.data;
+}
+
+export async function removeCharacter(sceneId: string, characterId: string): Promise<Scene> {
+  const res = await api.delete<Scene>(`/scenes/${sceneId}/characters/${characterId}`);
+  return res.data;
+}
+
+export async function assignWorldEntry(sceneId: string, worldEntryId: string): Promise<Scene> {
+  const res = await api.post<Scene>(`/scenes/${sceneId}/world/${worldEntryId}`);
+  return res.data;
+}
+
+export async function removeWorldEntry(sceneId: string, worldEntryId: string): Promise<Scene> {
+  const res = await api.delete<Scene>(`/scenes/${sceneId}/world/${worldEntryId}`);
+  return res.data;
+}

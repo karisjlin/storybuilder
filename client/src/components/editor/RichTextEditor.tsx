@@ -11,6 +11,7 @@ interface RichTextEditorProps {
   content: object | null;       // TipTap JSON document from the database
   onChange: (content: object, wordCount: number) => void;
   editable?: boolean;
+  placeholder?: string;
 }
 
 // Count words by splitting on whitespace — returns 0 for blank content
@@ -18,7 +19,7 @@ function countWords(text: string): number {
   return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
 }
 
-export default function RichTextEditor({ content, onChange, editable = true }: RichTextEditorProps) {
+export default function RichTextEditor({ content, onChange, editable = true, placeholder = 'Write your scene...' }: RichTextEditorProps) {
   // Stable callback so the editor doesn't re-initialise on every render
   const handleUpdate = useCallback(
     ({ editor }: { editor: NonNullable<ReturnType<typeof useEditor>> }) => {
@@ -32,9 +33,7 @@ export default function RichTextEditor({ content, onChange, editable = true }: R
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Placeholder.configure({
-        placeholder: 'Write your scene...',
-      }),
+      Placeholder.configure({ placeholder }),
     ],
     content: content || '',
     editable,

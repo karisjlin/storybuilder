@@ -21,10 +21,10 @@ export async function getChapter(id: string): Promise<Chapter> {
   return response.data;
 }
 
-// Partially update a chapter — used for auto-save (content + wordCount) and status changes
+// Partially update a chapter — used for status changes, title edits, and final draft auto-save
 export async function updateChapter(
   id: string,
-  data: Partial<Pick<Chapter, 'title' | 'content' | 'status' | 'wordCount'>>
+  data: Partial<Pick<Chapter, 'title' | 'content' | 'status' | 'wordCount' | 'finalContent' | 'finalWordCount'>>
 ): Promise<Chapter> {
   const response = await api.put<Chapter>(`/chapters/${id}`, data);
   return response.data;

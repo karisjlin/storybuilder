@@ -52,6 +52,16 @@ export class Chapter extends Model {
   @Column(DataType.INTEGER)
   declare wordCount: number;
 
+  // Final draft — a separate TipTap document for the polished version of the chapter.
+  // The rough draft lives in scenes; the final draft lives here.
+  @AllowNull(true)
+  @Column(DataType.JSONB)
+  declare finalContent: object | null;
+
+  @Default(0)
+  @Column(DataType.INTEGER)
+  declare finalWordCount: number;
+
   @BelongsTo(() => Story)
   declare story: Story;
 }

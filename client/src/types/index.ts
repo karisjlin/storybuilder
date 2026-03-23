@@ -23,8 +23,24 @@ export interface Chapter {
   order: number;
   status: 'todo' | 'active' | 'done';
   wordCount: number;
+  finalContent: object | null;
+  finalWordCount: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export type WorldCategory = 'location' | 'lore' | 'item' | 'faction' | 'event' | 'condition' | 'other';
+
+export interface SceneCharacterRef {
+  id: string;
+  name: string;
+  role: string | null;
+}
+
+export interface SceneWorldEntryRef {
+  id: string;
+  name: string;
+  category: WorldCategory;
 }
 
 export interface Scene {
@@ -34,6 +50,8 @@ export interface Scene {
   content: string | null;
   order: number;
   wordCount: number;
+  characters: SceneCharacterRef[];
+  worldEntries: SceneWorldEntryRef[];
   createdAt: string;
   updatedAt: string;
 }
@@ -63,8 +81,6 @@ export interface CharacterRelationship {
   createdAt: string;
   updatedAt: string;
 }
-
-export type WorldCategory = 'location' | 'lore' | 'item' | 'faction' | 'event' | 'condition' | 'other';
 
 export interface WorldEntry {
   id: string;

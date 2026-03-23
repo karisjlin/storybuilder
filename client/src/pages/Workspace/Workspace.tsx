@@ -5,7 +5,7 @@
 //  - Sidebar: draggable chapter list
 //  - Main area: scenes for the active chapter displayed as sticky note cards
 //  - Cards can be dragged to reorder; each saves independently on content change
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
@@ -18,9 +18,12 @@ import {
 import { getStory } from '../../services/stories';
 import { getChapters, createChapter, updateChapter, deleteChapter, reorderChapters } from '../../services/chapters';
 import { getScenes, createScene, updateScene, deleteScene, reorderScenes } from '../../services/scenes';
-import { Story, Chapter, Scene } from '../../types';
+import { getCharacters } from '../../services/characters';
+import { getWorldEntries } from '../../services/world';
+import { Story, Chapter, Scene, Character, WorldEntry } from '../../types';
 import SortableChapterItem from './SortableChapterItem';
 import SceneCard from './SceneCard';
+import RichTextEditor from '../../components/editor/RichTextEditor';
 import CharactersPanel from './CharactersPanel';
 import WorldPanel from './WorldPanel';
 import TagsPanel from './TagsPanel';
@@ -45,6 +48,8 @@ export default function Workspace() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   const [scenes, setScenes] = useState<Scene[]>([]);
+  const [allCharacters, setAllCharacters] = useState<Character[]>([]);
+  const [allWorldEntries, setAllWorldEntries] = useState<WorldEntry[]>([]);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('chapters');
   const [loading, setLoading] = useState(true);
   const [newChapterTitle, setNewChapterTitle] = useState('');
@@ -52,6 +57,11 @@ export default function Workspace() {
   const [addingScene, setAddingScene] = useState(false);
   const [newSceneTitle, setNewSceneTitle] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [draftMode, setDraftMode] = useState<'rough' | 'final'>('rough');
+  const [finalSaving, setFinalSaving] = useState(false);
+
+  const finalSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingFinalRef = useRef<{ content: object; wordCount: number } | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -63,9 +73,16 @@ export default function Workspace() {
     if (!storyId) return;
     async function load() {
       try {
-        const [s, chs] = await Promise.all([getStory(storyId!), getChapters(storyId!)]);
+        const [s, chs, chars, world] = await Promise.all([
+          getStory(storyId!),
+          getChapters(storyId!),
+          getCharacters(storyId!),
+          getWorldEntries(storyId!),
+        ]);
         setStory(s);
         setChapters(chs);
+        setAllCharacters(chars);
+        setAllWorldEntries(world);
         if (chs.length > 0) setActiveChapter(chs[0]);
       } catch {
         navigate('/dashboard');
@@ -156,6 +173,28 @@ export default function Workspace() {
     await reorderScenes(activeChapter.id, reordered.map(s => ({ id: s.id, order: s.order })));
   }
 
+  // Debounced auto-save for the final draft TipTap editor
+  const handleFinalContentChange = useCallback((content: object, wordCount: number) => {
+    if (!activeChapter) return;
+    pendingFinalRef.current = { content, wordCount };
+    if (finalSaveTimer.current) clearTimeout(finalSaveTimer.current);
+    finalSaveTimer.current = setTimeout(async () => {
+      if (!pendingFinalRef.current || !activeChapter) return;
+      setFinalSaving(true);
+      try {
+        const updated = await updateChapter(activeChapter.id, {
+          finalContent: pendingFinalRef.current.content,
+          finalWordCount: pendingFinalRef.current.wordCount,
+        });
+        setActiveChapter(updated);
+        setChapters(prev => prev.map(c => c.id === updated.id ? updated : c));
+      } finally {
+        setFinalSaving(false);
+        pendingFinalRef.current = null;
+      }
+    }, 1500);
+  }, [activeChapter]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-900 flex items-center justify-center">
@@ -198,8 +237,14 @@ export default function Workspace() {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          {activeTab === 'chapters' && totalWords > 0 && (
+          {activeTab === 'chapters' && finalSaving && (
+            <span className="text-xs text-text-muted font-mono animate-pulse">Saving...</span>
+          )}
+          {activeTab === 'chapters' && !finalSaving && draftMode === 'rough' && totalWords > 0 && (
             <span className="text-xs text-text-muted font-mono">{totalWords.toLocaleString()} words</span>
+          )}
+          {activeTab === 'chapters' && !finalSaving && draftMode === 'final' && activeChapter && activeChapter.finalWordCount > 0 && (
+            <span className="text-xs text-text-muted font-mono">{activeChapter.finalWordCount.toLocaleString()} words</span>
           )}
           {activeTab === 'chapters' && (
             <button
@@ -273,11 +318,28 @@ export default function Workspace() {
           {activeTab === 'chapters' && (
             activeChapter ? (
               <>
-                {/* Chapter header + add scene button */}
+                {/* Chapter header */}
                 <div className="px-8 py-5 border-b border-surface-700 flex items-center gap-4 shrink-0">
                   <h2 className="font-heading text-xl font-bold text-text-primary flex-1">
                     {activeChapter.title}
                   </h2>
+
+                  {/* Rough / Final draft toggle */}
+                  <div className="flex items-center bg-surface-700 rounded-lg p-0.5 text-xs font-mono">
+                    <button
+                      onClick={() => setDraftMode('rough')}
+                      className={`px-3 py-1.5 rounded-md transition-colors ${draftMode === 'rough' ? 'bg-surface-600 text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+                    >
+                      Rough Draft
+                    </button>
+                    <button
+                      onClick={() => setDraftMode('final')}
+                      className={`px-3 py-1.5 rounded-md transition-colors ${draftMode === 'final' ? 'bg-surface-600 text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+                    >
+                      Final Draft
+                    </button>
+                  </div>
+
                   <select
                     value={activeChapter.status}
                     onChange={e => handleChapterStatusChange(activeChapter, e.target.value as Chapter['status'])}
@@ -287,16 +349,19 @@ export default function Workspace() {
                       <option key={val} value={val}>{label}</option>
                     ))}
                   </select>
-                  <button
-                    onClick={() => setAddingScene(true)}
-                    className="bg-accent-green text-white text-sm px-4 py-1.5 rounded-lg font-body hover:bg-green-600 transition-colors"
-                  >
-                    + Add Scene
-                  </button>
+
+                  {draftMode === 'rough' && (
+                    <button
+                      onClick={() => setAddingScene(true)}
+                      className="bg-accent-green text-white text-sm px-4 py-1.5 rounded-lg font-body hover:bg-green-600 transition-colors"
+                    >
+                      + Add Scene
+                    </button>
+                  )}
                 </div>
 
-                {/* Inline add scene form */}
-                {addingScene && (
+                {/* Inline add scene form — rough draft only */}
+                {draftMode === 'rough' && addingScene && (
                   <form onSubmit={handleAddScene} className="px-8 py-3 border-b border-surface-700 flex items-center gap-3 shrink-0 bg-surface-800/50">
                     <input
                       autoFocus
@@ -310,39 +375,56 @@ export default function Workspace() {
                   </form>
                 )}
 
-                {/* Sticky note grid */}
-                <div className="flex-1 overflow-y-auto p-8">
-                  {scenes.length === 0 ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <p className="font-heading text-xl font-bold text-text-muted mb-2">No scenes yet</p>
-                        <p className="text-text-muted font-body text-sm mb-4">Add a scene to start writing.</p>
-                        <button
-                          onClick={() => setAddingScene(true)}
-                          className="bg-accent-green text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-green-600 transition-colors"
-                        >
-                          + Add First Scene
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSceneDragEnd}>
-                      <SortableContext items={scenes.map(s => s.id)} strategy={rectSortingStrategy}>
-                        <div className="flex flex-wrap gap-5">
-                          {scenes.map(scene => (
-                            <SceneCard
-                              key={scene.id}
-                              scene={scene}
-                              onDelete={() => handleDeleteScene(scene.id)}
-                              onTitleChange={title => handleSceneTitleChange(scene.id, title)}
-                              onContentChange={(content, wordCount) => handleSceneContentChange(scene.id, content, wordCount)}
-                            />
-                          ))}
+                {/* ── Rough Draft: sticky note grid ── */}
+                {draftMode === 'rough' && (
+                  <div className="flex-1 overflow-y-auto p-8">
+                    {scenes.length === 0 ? (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center">
+                          <p className="font-heading text-xl font-bold text-text-muted mb-2">No scenes yet</p>
+                          <p className="text-text-muted font-body text-sm mb-4">Add a scene to start writing.</p>
+                          <button
+                            onClick={() => setAddingScene(true)}
+                            className="bg-accent-green text-white text-sm px-4 py-2 rounded-lg font-body hover:bg-green-600 transition-colors"
+                          >
+                            + Add First Scene
+                          </button>
                         </div>
-                      </SortableContext>
-                    </DndContext>
-                  )}
-                </div>
+                      </div>
+                    ) : (
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSceneDragEnd}>
+                        <SortableContext items={scenes.map(s => s.id)} strategy={rectSortingStrategy}>
+                          <div className="flex flex-wrap gap-5">
+                            {scenes.map(scene => (
+                              <SceneCard
+                                key={scene.id}
+                                scene={scene}
+                                allCharacters={allCharacters}
+                                allWorldEntries={allWorldEntries}
+                                onUpdate={updated => setScenes(prev => prev.map(s => s.id === updated.id ? updated : s))}
+                                onDelete={() => handleDeleteScene(scene.id)}
+                                onTitleChange={title => handleSceneTitleChange(scene.id, title)}
+                                onContentChange={(content, wordCount) => handleSceneContentChange(scene.id, content, wordCount)}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Final Draft: full TipTap editor ── */}
+                {draftMode === 'final' && (
+                  <div className="flex-1 overflow-y-auto px-8 py-6">
+                    <RichTextEditor
+                      key={activeChapter.id}
+                      content={activeChapter.finalContent}
+                      onChange={handleFinalContentChange}
+                      placeholder="Start your chapter..."
+                    />
+                  </div>
+                )}
               </>
             ) : (
               <div className="flex-1 flex items-center justify-center">
