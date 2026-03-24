@@ -52,6 +52,11 @@ export class Chapter extends Model {
   @Column(DataType.INTEGER)
   declare wordCount: number;
 
+  // Short synopsis shown at the top of the chapter workspace — separate from the full draft
+  @AllowNull(true)
+  @Column(DataType.TEXT)
+  declare summary: string | null;
+
   // Final draft — a separate TipTap document for the polished version of the chapter.
   // The rough draft lives in scenes; the final draft lives here.
   @AllowNull(true)

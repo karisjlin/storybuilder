@@ -24,7 +24,7 @@ export async function getChapter(id: string): Promise<Chapter> {
 // Partially update a chapter — used for status changes, title edits, and final draft auto-save
 export async function updateChapter(
   id: string,
-  data: Partial<Pick<Chapter, 'title' | 'content' | 'status' | 'wordCount' | 'finalContent' | 'finalWordCount'>>
+  data: Partial<Pick<Chapter, 'title' | 'content' | 'status' | 'wordCount' | 'summary' | 'finalContent' | 'finalWordCount'>>
 ): Promise<Chapter> {
   const response = await api.put<Chapter>(`/chapters/${id}`, data);
   return response.data;

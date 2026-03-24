@@ -23,6 +23,7 @@ export interface Chapter {
   order: number;
   status: 'todo' | 'active' | 'done';
   wordCount: number;
+  summary: string | null;
   finalContent: object | null;
   finalWordCount: number;
   createdAt: string;

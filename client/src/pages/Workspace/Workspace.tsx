@@ -319,45 +319,63 @@ export default function Workspace() {
             activeChapter ? (
               <>
                 {/* Chapter header */}
-                <div className="px-8 py-5 border-b border-surface-700 flex items-center gap-4 shrink-0">
-                  <h2 className="font-heading text-xl font-bold text-text-primary flex-1">
-                    {activeChapter.title}
-                  </h2>
+                <div className="px-8 pt-5 pb-4 border-b border-surface-700 shrink-0">
+                  {/* Top row: title + controls */}
+                  <div className="flex items-center gap-4 mb-3">
+                    <h2 className="font-heading text-xl font-bold text-text-primary flex-1">
+                      {activeChapter.title}
+                    </h2>
 
-                  {/* Rough / Final draft toggle */}
-                  <div className="flex items-center bg-surface-700 rounded-lg p-0.5 text-xs font-mono">
-                    <button
-                      onClick={() => setDraftMode('rough')}
-                      className={`px-3 py-1.5 rounded-md transition-colors ${draftMode === 'rough' ? 'bg-surface-600 text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+                    {/* Rough / Final draft toggle */}
+                    <div className="flex items-center bg-surface-700 rounded-lg p-0.5 text-xs font-mono">
+                      <button
+                        onClick={() => setDraftMode('rough')}
+                        className={`px-3 py-1.5 rounded-md transition-colors ${draftMode === 'rough' ? 'bg-surface-600 text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+                      >
+                        Rough Draft
+                      </button>
+                      <button
+                        onClick={() => setDraftMode('final')}
+                        className={`px-3 py-1.5 rounded-md transition-colors ${draftMode === 'final' ? 'bg-surface-600 text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+                      >
+                        Final Draft
+                      </button>
+                    </div>
+
+                    <select
+                      value={activeChapter.status}
+                      onChange={e => handleChapterStatusChange(activeChapter, e.target.value as Chapter['status'])}
+                      className={`text-sm font-mono bg-surface-700 border border-surface-500 rounded-lg px-3 py-1.5 focus:outline-none focus:border-accent-green ${STATUS_COLORS[activeChapter.status]}`}
                     >
-                      Rough Draft
-                    </button>
-                    <button
-                      onClick={() => setDraftMode('final')}
-                      className={`px-3 py-1.5 rounded-md transition-colors ${draftMode === 'final' ? 'bg-surface-600 text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
-                    >
-                      Final Draft
-                    </button>
+                      {Object.entries(STATUS_LABELS).map(([val, label]) => (
+                        <option key={val} value={val}>{label}</option>
+                      ))}
+                    </select>
+
+                    {draftMode === 'rough' && (
+                      <button
+                        onClick={() => setAddingScene(true)}
+                        className="bg-accent-green text-white text-sm px-4 py-1.5 rounded-lg font-body hover:bg-green-600 transition-colors"
+                      >
+                        + Add Scene
+                      </button>
+                    )}
                   </div>
 
-                  <select
-                    value={activeChapter.status}
-                    onChange={e => handleChapterStatusChange(activeChapter, e.target.value as Chapter['status'])}
-                    className={`text-sm font-mono bg-surface-700 border border-surface-500 rounded-lg px-3 py-1.5 focus:outline-none focus:border-accent-green ${STATUS_COLORS[activeChapter.status]}`}
-                  >
-                    {Object.entries(STATUS_LABELS).map(([val, label]) => (
-                      <option key={val} value={val}>{label}</option>
-                    ))}
-                  </select>
-
-                  {draftMode === 'rough' && (
-                    <button
-                      onClick={() => setAddingScene(true)}
-                      className="bg-accent-green text-white text-sm px-4 py-1.5 rounded-lg font-body hover:bg-green-600 transition-colors"
-                    >
-                      + Add Scene
-                    </button>
-                  )}
+                  {/* Chapter summary — editable, saved on blur */}
+                  <textarea
+                    key={activeChapter.id}
+                    defaultValue={activeChapter.summary ?? ''}
+                    onBlur={async e => {
+                      const summary = e.target.value.trim() || null;
+                      const updated = await updateChapter(activeChapter.id, { summary });
+                      setActiveChapter(updated);
+                      setChapters(prev => prev.map(c => c.id === updated.id ? updated : c));
+                    }}
+                    placeholder="Chapter summary — what happens in this chapter?"
+                    rows={2}
+                    className="w-full bg-transparent text-sm font-body text-text-muted placeholder:text-surface-500 resize-none outline-none leading-relaxed"
+                  />
                 </div>
 
                 {/* Inline add scene form — rough draft only */}
