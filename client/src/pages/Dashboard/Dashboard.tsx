@@ -139,6 +139,9 @@ export default function Dashboard() {
                 {user.username}
               </span>
             )}
+            <Button variant="ghost" size="sm" onClick={() => navigate('/account')}>
+              Account
+            </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               Logout
             </Button>

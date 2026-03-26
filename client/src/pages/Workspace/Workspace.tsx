@@ -237,6 +237,12 @@ export default function Workspace() {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
+          <button
+            onClick={() => navigate('/account')}
+            className="text-text-muted hover:text-text-primary transition-colors text-sm font-body"
+          >
+            Account
+          </button>
           {activeTab === 'chapters' && finalSaving && (
             <span className="text-xs text-text-muted font-mono animate-pulse">Saving...</span>
           )}

@@ -20,6 +20,15 @@ export async function getMe(): Promise<User> {
   return response.data;
 }
 
+export async function updateEmail(email: string, currentPassword: string): Promise<AuthResponse> {
+  const response = await api.put<AuthResponse>('/auth/email', { email, currentPassword });
+  return response.data;
+}
+
+export async function updatePassword(currentPassword: string, newPassword: string): Promise<void> {
+  await api.put('/auth/password', { currentPassword, newPassword });
+}
+
 export function logout(): void {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
