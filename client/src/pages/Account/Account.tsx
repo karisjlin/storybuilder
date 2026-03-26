@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { updateEmail, updatePassword, logout } from '../../services/auth';
+import { getStories } from '../../services/stories';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
@@ -13,6 +14,12 @@ export default function Account() {
   const [emailError, setEmailError] = useState('');
   const [emailSuccess, setEmailSuccess] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
+
+  const [storyCount, setStoryCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    getStories().then((stories) => setStoryCount(stories.length)).catch(() => {});
+  }, []);
 
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [passwordError, setPasswordError] = useState('');
@@ -111,89 +118,96 @@ export default function Account() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-10 space-y-8">
+      <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
         <div>
           <h2 className="font-heading text-3xl font-bold text-text-primary">Account</h2>
           <p className="text-text-muted font-body text-sm mt-1">{user?.username}</p>
+          {storyCount !== null && (
+            <p className="text-text-muted font-body text-sm mt-0.5">
+              {storyCount} {storyCount === 1 ? 'story' : 'stories'}
+            </p>
+          )}
         </div>
 
-        {/* Change Email */}
-        <div className="bg-surface-800 rounded-2xl p-6 border border-surface-600">
-          <h3 className="font-heading text-lg font-bold text-text-primary mb-4">Change Email</h3>
-          <form onSubmit={handleEmailUpdate} className="space-y-4">
-            {emailError && (
-              <div className="px-4 py-3 rounded-lg bg-accent-red/10 border border-accent-red/30 text-accent-red text-sm font-body">
-                {emailError}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Change Email */}
+          <div className="bg-surface-800 rounded-2xl p-6 border border-surface-600">
+            <h3 className="font-heading text-lg font-bold text-text-primary mb-4">Change Email</h3>
+            <form onSubmit={handleEmailUpdate} className="space-y-4">
+              {emailError && (
+                <div className="px-4 py-3 rounded-lg bg-accent-red/10 border border-accent-red/30 text-accent-red text-sm font-body">
+                  {emailError}
+                </div>
+              )}
+              {emailSuccess && (
+                <div className="px-4 py-3 rounded-lg bg-accent-green/10 border border-accent-green/30 text-accent-green text-sm font-body">
+                  {emailSuccess}
+                </div>
+              )}
+              <Input
+                label="New Email"
+                type="email"
+                value={emailForm.email}
+                onChange={(e) => setEmailForm((f) => ({ ...f, email: e.target.value }))}
+                autoComplete="email"
+              />
+              <Input
+                label="Current Password"
+                type="password"
+                value={emailForm.currentPassword}
+                onChange={(e) => setEmailForm((f) => ({ ...f, currentPassword: e.target.value }))}
+                autoComplete="current-password"
+              />
+              <div className="flex justify-end">
+                <Button type="submit" loading={emailLoading}>
+                  Update Email
+                </Button>
               </div>
-            )}
-            {emailSuccess && (
-              <div className="px-4 py-3 rounded-lg bg-accent-green/10 border border-accent-green/30 text-accent-green text-sm font-body">
-                {emailSuccess}
-              </div>
-            )}
-            <Input
-              label="New Email"
-              type="email"
-              value={emailForm.email}
-              onChange={(e) => setEmailForm((f) => ({ ...f, email: e.target.value }))}
-              autoComplete="email"
-            />
-            <Input
-              label="Current Password"
-              type="password"
-              value={emailForm.currentPassword}
-              onChange={(e) => setEmailForm((f) => ({ ...f, currentPassword: e.target.value }))}
-              autoComplete="current-password"
-            />
-            <div className="flex justify-end">
-              <Button type="submit" loading={emailLoading}>
-                Update Email
-              </Button>
-            </div>
-          </form>
-        </div>
+            </form>
+          </div>
 
-        {/* Change Password */}
-        <div className="bg-surface-800 rounded-2xl p-6 border border-surface-600">
-          <h3 className="font-heading text-lg font-bold text-text-primary mb-4">Change Password</h3>
-          <form onSubmit={handlePasswordUpdate} className="space-y-4">
-            {passwordError && (
-              <div className="px-4 py-3 rounded-lg bg-accent-red/10 border border-accent-red/30 text-accent-red text-sm font-body">
-                {passwordError}
+          {/* Change Password */}
+          <div className="bg-surface-800 rounded-2xl p-6 border border-surface-600">
+            <h3 className="font-heading text-lg font-bold text-text-primary mb-4">Change Password</h3>
+            <form onSubmit={handlePasswordUpdate} className="space-y-4">
+              {passwordError && (
+                <div className="px-4 py-3 rounded-lg bg-accent-red/10 border border-accent-red/30 text-accent-red text-sm font-body">
+                  {passwordError}
+                </div>
+              )}
+              {passwordSuccess && (
+                <div className="px-4 py-3 rounded-lg bg-accent-green/10 border border-accent-green/30 text-accent-green text-sm font-body">
+                  {passwordSuccess}
+                </div>
+              )}
+              <Input
+                label="Current Password"
+                type="password"
+                value={passwordForm.currentPassword}
+                onChange={(e) => setPasswordForm((f) => ({ ...f, currentPassword: e.target.value }))}
+                autoComplete="current-password"
+              />
+              <Input
+                label="New Password"
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={(e) => setPasswordForm((f) => ({ ...f, newPassword: e.target.value }))}
+                autoComplete="new-password"
+              />
+              <Input
+                label="Confirm New Password"
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(e) => setPasswordForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                autoComplete="new-password"
+              />
+              <div className="flex justify-end">
+                <Button type="submit" loading={passwordLoading}>
+                  Update Password
+                </Button>
               </div>
-            )}
-            {passwordSuccess && (
-              <div className="px-4 py-3 rounded-lg bg-accent-green/10 border border-accent-green/30 text-accent-green text-sm font-body">
-                {passwordSuccess}
-              </div>
-            )}
-            <Input
-              label="Current Password"
-              type="password"
-              value={passwordForm.currentPassword}
-              onChange={(e) => setPasswordForm((f) => ({ ...f, currentPassword: e.target.value }))}
-              autoComplete="current-password"
-            />
-            <Input
-              label="New Password"
-              type="password"
-              value={passwordForm.newPassword}
-              onChange={(e) => setPasswordForm((f) => ({ ...f, newPassword: e.target.value }))}
-              autoComplete="new-password"
-            />
-            <Input
-              label="Confirm New Password"
-              type="password"
-              value={passwordForm.confirmPassword}
-              onChange={(e) => setPasswordForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-              autoComplete="new-password"
-            />
-            <div className="flex justify-end">
-              <Button type="submit" loading={passwordLoading}>
-                Update Password
-              </Button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </main>
     </div>
