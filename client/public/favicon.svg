@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="8" fill="#16161A"/>
+
+  <!-- Quill feather -->
+  <path d="M24 4 C24 4 14 8 10 16 C8 20 8 26 8 26 C8 26 10 24 13 22 C11 21 10 19 11 17 C12 14 15 12 18 13 C20 10 24 4 24 4 Z" fill="#22C55E" opacity="0.9"/>
+
+  <!-- Quill tip -->
+  <path d="M8 26 C8 26 10 22 12 20 L14 22 C12 24 8 26 8 26 Z" fill="#16161A"/>
+
+  <!-- Ink stroke line -->
+  <path d="M11 23 Q13 21 15 19" stroke="#22C55E" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.6"/>
+</svg>
