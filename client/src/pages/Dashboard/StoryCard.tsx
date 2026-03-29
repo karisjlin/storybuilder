@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Story } from '../../types';
 import { exportStoryToPdf } from '../../utils/exportPdf';
+import { updateStory } from '../../services/stories';
 
 interface StoryCardProps {
   story: Story;
   onDelete: (id: string) => void;
+  onUpdate: (updated: Story) => void;
 }
 
 const statusConfig = {
@@ -34,6 +36,11 @@ function formatDate(dateString: string): string {
   });
 }
 
+function formatWordCount(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return n.toString();
+}
+
 const TrashIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -46,9 +53,22 @@ const ExportIcon = () => (
   </svg>
 );
 
-export default function StoryCard({ story, onDelete }: StoryCardProps) {
+const GoalIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
+
+export default function StoryCard({ story, onDelete, onUpdate }: StoryCardProps) {
+  const navigate = useNavigate();
   const status = statusConfig[story.status];
   const [exporting, setExporting] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalInput, setGoalInput] = useState(story.wordCountGoal?.toString() ?? '');
+
+  const progress = story.wordCountGoal
+    ? Math.min((story.totalWordCount / story.wordCountGoal) * 100, 100)
+    : null;
 
   function handleDelete(e: React.MouseEvent) {
     e.preventDefault();
@@ -75,8 +95,33 @@ export default function StoryCard({ story, onDelete }: StoryCardProps) {
     }
   }
 
+  function openGoalEditor(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setGoalInput(story.wordCountGoal?.toString() ?? '');
+    setEditingGoal(true);
+  }
+
+  async function saveGoal(e: React.FormEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const val = parseInt(goalInput);
+    const goal = isNaN(val) || val <= 0 ? null : val;
+    try {
+      const updated = await updateStory(story.id, { wordCountGoal: goal });
+      onUpdate({ ...story, wordCountGoal: updated.wordCountGoal });
+      setEditingGoal(false);
+    } catch (err) {
+      console.error('Failed to save goal:', err);
+    }
+  }
+
+  function handleGoalKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') setEditingGoal(false);
+  }
+
   return (
-    <Link to={`/stories/${story.id}`} className="block group">
+    <div onClick={() => navigate(`/stories/${story.id}`)} className="block group cursor-pointer">
       <div className="relative bg-surface-700 hover:bg-surface-600 rounded-xl border border-surface-600 hover:border-surface-500 transition-all duration-200 overflow-hidden h-full">
         {/* Top accent bar */}
         <div className={`h-1 w-full ${status.accentColor}`} />
@@ -95,6 +140,59 @@ export default function StoryCard({ story, onDelete }: StoryCardProps) {
           )}
           {!story.description && <div className="flex-1" />}
 
+          {/* Word count progress */}
+          {story.wordCountGoal && progress !== null ? (
+            <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center text-xs font-mono text-text-muted">
+                <span>{story.totalWordCount.toLocaleString()} words</span>
+                <span>{formatWordCount(story.wordCountGoal)} goal</span>
+              </div>
+              <div className="h-1.5 bg-surface-600 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-accent-green rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          ) : story.totalWordCount > 0 ? (
+            <p className="text-xs font-mono text-text-muted">
+              {story.totalWordCount.toLocaleString()} words
+            </p>
+          ) : null}
+
+          {/* Goal editor */}
+          {editingGoal && (
+            <form
+              onSubmit={saveGoal}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-2"
+            >
+              <input
+                type="number"
+                min="1"
+                placeholder="e.g. 80000"
+                value={goalInput}
+                onChange={(e) => setGoalInput(e.target.value)}
+                onKeyDown={handleGoalKeyDown}
+                autoFocus
+                className="flex-1 rounded-lg px-3 py-1.5 text-xs font-body bg-surface-600 border border-surface-500 text-text-primary placeholder-text-muted focus:outline-none focus:border-accent-green"
+              />
+              <button
+                type="submit"
+                className="px-2.5 py-1.5 rounded-lg bg-accent-green text-white text-xs font-body hover:brightness-110"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setEditingGoal(false); }}
+                className="px-2.5 py-1.5 rounded-lg bg-surface-600 text-text-muted text-xs font-body hover:text-text-primary"
+              >
+                Cancel
+              </button>
+            </form>
+          )}
+
           {/* Footer */}
           <div className="flex items-center justify-between pt-2 border-t border-surface-600">
             {/* Status badge */}
@@ -107,6 +205,15 @@ export default function StoryCard({ story, onDelete }: StoryCardProps) {
               <span className="text-xs font-mono text-text-muted mr-1">
                 {formatDate(story.createdAt)}
               </span>
+
+              {/* Set goal button */}
+              <button
+                onClick={openGoalEditor}
+                className="p-1.5 rounded-lg text-text-muted hover:text-accent-green hover:bg-accent-green/10 transition-colors duration-150"
+                title={story.wordCountGoal ? 'Edit word count goal' : 'Set word count goal'}
+              >
+                <GoalIcon />
+              </button>
 
               {/* Export PDF button */}
               <button
@@ -134,6 +241,6 @@ export default function StoryCard({ story, onDelete }: StoryCardProps) {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

@@ -22,7 +22,7 @@ export async function createStory(data: {
 
 export async function updateStory(
   id: string,
-  data: Partial<{ title: string; description: string; status: Story['status'] }>
+  data: Partial<{ title: string; description: string; status: Story['status']; wordCountGoal: number | null }>
 ): Promise<Story> {
   const response = await api.put<Story>(`/stories/${id}`, data);
   return response.data;

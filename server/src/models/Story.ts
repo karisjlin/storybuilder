@@ -42,6 +42,10 @@ export class Story extends Model {
   @Column(DataType.ENUM('draft', 'in_progress', 'complete'))
   declare status: 'draft' | 'in_progress' | 'complete';
 
+  @AllowNull(true)
+  @Column(DataType.INTEGER)
+  declare wordCountGoal: number | null;
+
   @BelongsTo(() => User)
   declare user: User;
 

@@ -11,6 +11,8 @@ export interface Story {
   title: string;
   description?: string;
   status: 'draft' | 'in_progress' | 'complete';
+  wordCountGoal: number | null;
+  totalWordCount: number;
   createdAt: string;
   updatedAt: string;
 }

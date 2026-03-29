@@ -1,7 +1,7 @@
 // RichTextEditor — TipTap-powered rich text editor component.
 // Supports headings, bold, italic, lists, blockquotes, and code blocks via StarterKit.
 // Calls onChange with the TipTap JSON document and a live word count after each keystroke.
-// Auto-syncs content when the active chapter changes (keyed by chapter ID in the parent).
+// Chapter switching is handled by the key prop in the parent (Workspace.tsx).
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -39,19 +39,6 @@ export default function RichTextEditor({ content, onChange, editable = true, pla
     editable,
     onUpdate: handleUpdate,
   });
-
-  // When the parent switches to a different chapter, replace the editor content.
-  // The key prop on RichTextEditor in Workspace.tsx ensures a fresh instance per chapter,
-  // but this effect also guards against stale content if the key approach changes.
-  useEffect(() => {
-    if (editor && content !== undefined) {
-      const currentJson = JSON.stringify(editor.getJSON());
-      const newJson = JSON.stringify(content);
-      if (currentJson !== newJson) {
-        editor.commands.setContent(content || '');
-      }
-    }
-  }, [editor, content]);
 
   // Keep the editable flag in sync if it changes at runtime
   useEffect(() => {

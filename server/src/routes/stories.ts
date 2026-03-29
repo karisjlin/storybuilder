@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { Story } from '../models/Story';
+import { Chapter } from '../models/Chapter';
 import { authenticate } from '../middleware/auth';
 
 const router = Router();
@@ -12,9 +13,19 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const stories = await Story.findAll({
       where: { userId: req.user!.id },
+      include: [{ model: Chapter, attributes: ['wordCount', 'finalWordCount'] }],
       order: [['createdAt', 'DESC']],
     });
-    res.json(stories);
+
+    const result = stories.map((story) => {
+      const chapters = (story.chapters ?? []) as Chapter[];
+      const totalWordCount = chapters.reduce((sum, ch) => {
+        return sum + (ch.finalWordCount > 0 ? ch.finalWordCount : ch.wordCount);
+      }, 0);
+      return { ...story.toJSON(), totalWordCount };
+    });
+
+    res.json(result);
   } catch (err) {
     console.error('Get stories error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -82,12 +93,13 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const { title, description, status } = req.body;
+    const { title, description, status, wordCountGoal } = req.body;
 
     await story.update({
       title: title !== undefined ? title : story.title,
       description: description !== undefined ? description : story.description,
       status: status !== undefined ? status : story.status,
+      wordCountGoal: wordCountGoal !== undefined ? (wordCountGoal || null) : story.wordCountGoal,
     });
 
     res.json(story);
