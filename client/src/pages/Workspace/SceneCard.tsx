@@ -60,9 +60,17 @@ export default function SceneCard({
   };
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [title, setTitle] = useState(scene.title);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTab, setPickerTab] = useState<'characters' | 'world'>('characters');
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  // Clear pending save timer on unmount to avoid calling onContentChange after removal
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, []);
 
   // Close picker when clicking outside
   useEffect(() => {
@@ -128,8 +136,9 @@ export default function SceneCard({
       {/* Title */}
       <input
         type="text"
-        defaultValue={scene.title}
-        onBlur={e => onTitleChange(e.target.value)}
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+        onBlur={() => onTitleChange(title)}
         className="bg-transparent px-3 pt-2.5 pb-1 text-sm font-heading font-bold text-[#c8e6ca] outline-none placeholder:text-[#3d5440]"
         placeholder="Scene title..."
       />

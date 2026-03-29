@@ -112,6 +112,15 @@ export async function exportStoryToPdf(story: Story, authorName: string): Promis
   // ── Chapters ────────────────────────────────────────────────────────────────
   const chapters = await getChapters(story.id);
 
+  // Fetch scenes for all chapters that need them in parallel
+  const chaptersNeedingScenes = chapters.filter(ch => !ch.finalContent);
+  const scenesPerChapter = await Promise.all(
+    chaptersNeedingScenes.map(ch => getScenes(ch.id))
+  );
+  const sceneMap = new Map(
+    chaptersNeedingScenes.map((ch, i) => [ch.id, scenesPerChapter[i]])
+  );
+
   for (let i = 0; i < chapters.length; i++) {
     const chapter = chapters[i];
 
@@ -146,7 +155,7 @@ export async function exportStoryToPdf(story: Story, authorName: string): Promis
       bodyText = tiptapToText(chapter.finalContent).trim();
     } else {
       // Fallback: concatenate rough draft scenes in order
-      const scenes = await getScenes(chapter.id);
+      const scenes = sceneMap.get(chapter.id) ?? [];
       if (scenes.length > 0) {
         bodyText = scenes
           .map(s => {

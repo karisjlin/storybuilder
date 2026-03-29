@@ -61,7 +61,7 @@ export default function Workspace() {
   const [finalSaving, setFinalSaving] = useState(false);
 
   const finalSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingFinalRef = useRef<{ content: object; wordCount: number } | null>(null);
+  const pendingFinalRef = useRef<{ chapterId: string; content: object; wordCount: number } | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -173,20 +173,23 @@ export default function Workspace() {
     await reorderScenes(activeChapter.id, reordered.map(s => ({ id: s.id, order: s.order })));
   }
 
-  // Debounced auto-save for the final draft TipTap editor
+  // Debounced auto-save for the final draft TipTap editor.
+  // Chapter ID is stored in the ref so the timeout always saves to the correct chapter,
+  // even if the user switches chapters before the 1.5s debounce fires.
   const handleFinalContentChange = useCallback((content: object, wordCount: number) => {
     if (!activeChapter) return;
-    pendingFinalRef.current = { content, wordCount };
+    pendingFinalRef.current = { chapterId: activeChapter.id, content, wordCount };
     if (finalSaveTimer.current) clearTimeout(finalSaveTimer.current);
     finalSaveTimer.current = setTimeout(async () => {
-      if (!pendingFinalRef.current || !activeChapter) return;
+      const pending = pendingFinalRef.current;
+      if (!pending) return;
       setFinalSaving(true);
       try {
-        const updated = await updateChapter(activeChapter.id, {
-          finalContent: pendingFinalRef.current.content,
-          finalWordCount: pendingFinalRef.current.wordCount,
+        const updated = await updateChapter(pending.chapterId, {
+          finalContent: pending.content,
+          finalWordCount: pending.wordCount,
         });
-        setActiveChapter(updated);
+        setActiveChapter(prev => prev?.id === updated.id ? updated : prev);
         setChapters(prev => prev.map(c => c.id === updated.id ? updated : c));
       } finally {
         setFinalSaving(false);
