@@ -8,7 +8,13 @@ import { Tag } from './Tag';
 
 export type TaggableType = 'chapter' | 'character' | 'worldEntry';
 
-@Table({ tableName: 'tag_assignments', timestamps: true })
+@Table({
+  tableName: 'tag_assignments',
+  timestamps: true,
+  indexes: [
+    { unique: true, fields: ['tagId', 'taggableId', 'taggableType'] },
+  ],
+})
 export class TagAssignment extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)

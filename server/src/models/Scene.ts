@@ -3,7 +3,7 @@
 // BelongsToMany associations let scenes track which characters and world entries appear in them.
 import {
   Table, Column, Model, PrimaryKey, Default, AllowNull,
-  DataType, ForeignKey, BelongsTo, BelongsToMany,
+  DataType, ForeignKey, BelongsTo, BelongsToMany, Index,
 } from 'sequelize-typescript';
 import { Chapter } from './Chapter';
 import { Character } from './Character';
@@ -18,6 +18,7 @@ export class Scene extends Model {
   @Column(DataType.UUID)
   declare id: string;
 
+  @Index
   @AllowNull(false)
   @ForeignKey(() => Chapter)
   @Column(DataType.UUID)

@@ -11,6 +11,7 @@ import {
   ForeignKey,
   BelongsTo,
   HasMany,
+  Index,
 } from 'sequelize-typescript';
 import { User } from './User';
 import { Chapter } from './Chapter';
@@ -24,6 +25,7 @@ export class Story extends Model {
   declare id: string;
 
   // Foreign key linking this story to its owner
+  @Index
   @AllowNull(false)
   @ForeignKey(() => User)
   @Column(DataType.UUID)

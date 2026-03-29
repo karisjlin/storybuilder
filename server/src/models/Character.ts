@@ -2,7 +2,7 @@
 // Traits are stored as JSONB (array of strings) to avoid a separate traits table.
 import {
   Table, Column, Model, PrimaryKey, Default, AllowNull,
-  DataType, ForeignKey, BelongsTo, HasMany,
+  DataType, ForeignKey, BelongsTo, HasMany, Index,
 } from 'sequelize-typescript';
 import { Story } from './Story';
 
@@ -13,6 +13,7 @@ export class Character extends Model {
   @Column(DataType.UUID)
   declare id: string;
 
+  @Index
   @AllowNull(false)
   @ForeignKey(() => Story)
   @Column(DataType.UUID)

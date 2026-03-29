@@ -211,26 +211,34 @@ export default function Workspace() {
   return (
     <div className="min-h-screen bg-surface-900 flex flex-col">
       {/* ── Top Bar ── */}
-      <header className="h-14 bg-surface-800 border-b border-surface-600 flex items-center px-4 gap-4 shrink-0">
+      <header className="h-14 bg-surface-800 border-b border-surface-600 flex items-center px-6 gap-4 shrink-0">
         <button
           onClick={() => navigate('/dashboard')}
-          className="text-text-muted hover:text-text-primary transition-colors text-sm font-body"
+          className="text-text-muted hover:text-text-primary transition-colors text-sm font-body shrink-0"
         >
           ← Dashboard
         </button>
-        <div className="w-px h-5 bg-surface-600" />
+        <div className="w-px h-5 bg-surface-600 shrink-0" />
         <h1 className="font-heading font-bold text-text-primary truncate">{story?.title}</h1>
+        <button
+          onClick={() => navigate('/account')}
+          className="ml-auto text-text-muted hover:text-text-primary transition-colors text-sm font-body shrink-0"
+        >
+          Account
+        </button>
+      </header>
 
-        {/* Tab nav */}
-        <div className="hidden sm:flex items-center gap-1 ml-4">
+      {/* ── Tab Strip ── */}
+      <div className="bg-surface-800 border-b border-surface-600 flex items-center px-6 shrink-0">
+        <div className="flex items-center gap-1 flex-1">
           {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-body transition-colors ${
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-body border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-surface-700 text-text-primary'
-                  : 'text-text-muted hover:text-text-primary hover:bg-surface-700/50'
+                  ? 'border-accent-green text-text-primary'
+                  : 'border-transparent text-text-muted hover:text-text-primary'
               }`}
             >
               <span>{tab.icon}</span>
@@ -239,32 +247,27 @@ export default function Workspace() {
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-3">
-          <button
-            onClick={() => navigate('/account')}
-            className="text-text-muted hover:text-text-primary transition-colors text-sm font-body"
-          >
-            Account
-          </button>
-          {activeTab === 'chapters' && finalSaving && (
-            <span className="text-xs text-text-muted font-mono animate-pulse">Saving...</span>
-          )}
-          {activeTab === 'chapters' && !finalSaving && draftMode === 'rough' && totalWords > 0 && (
-            <span className="text-xs text-text-muted font-mono">{totalWords.toLocaleString()} words</span>
-          )}
-          {activeTab === 'chapters' && !finalSaving && draftMode === 'final' && activeChapter && activeChapter.finalWordCount > 0 && (
-            <span className="text-xs text-text-muted font-mono">{activeChapter.finalWordCount.toLocaleString()} words</span>
-          )}
-          {activeTab === 'chapters' && (
+        {/* Chapter-specific controls */}
+        {activeTab === 'chapters' && (
+          <div className="flex items-center gap-4">
+            {finalSaving && (
+              <span className="text-xs text-text-muted font-mono animate-pulse">Saving...</span>
+            )}
+            {!finalSaving && draftMode === 'rough' && totalWords > 0 && (
+              <span className="text-xs text-text-muted font-mono">{totalWords.toLocaleString()} words</span>
+            )}
+            {!finalSaving && draftMode === 'final' && activeChapter && activeChapter.finalWordCount > 0 && (
+              <span className="text-xs text-text-muted font-mono">{activeChapter.finalWordCount.toLocaleString()} words</span>
+            )}
             <button
               onClick={() => setSidebarOpen(v => !v)}
-              className="text-text-muted hover:text-text-primary transition-colors text-sm"
+              className="text-text-muted hover:text-text-primary transition-colors text-sm font-body py-3"
             >
               {sidebarOpen ? '← Hide' : '→ Chapters'}
             </button>
-          )}
-        </div>
-      </header>
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-1 overflow-hidden">
         {/* ── Sidebar (chapters only) ── */}

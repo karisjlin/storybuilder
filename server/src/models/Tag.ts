@@ -2,7 +2,7 @@
 // Tag assignment is handled via the polymorphic TagAssignment join table.
 import {
   Table, Column, Model, PrimaryKey, Default, AllowNull,
-  DataType, ForeignKey, BelongsTo, HasMany,
+  DataType, ForeignKey, BelongsTo, HasMany, Index,
 } from 'sequelize-typescript';
 import { Story } from './Story';
 import { TagAssignment } from './TagAssignment';
@@ -14,6 +14,7 @@ export class Tag extends Model {
   @Column(DataType.UUID)
   declare id: string;
 
+  @Index
   @AllowNull(false)
   @ForeignKey(() => Story)
   @Column(DataType.UUID)

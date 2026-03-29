@@ -11,6 +11,7 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
+  Index,
 } from 'sequelize-typescript';
 import { Story } from './Story';
 
@@ -23,6 +24,7 @@ export class Chapter extends Model {
   declare id: string;
 
   // Foreign key linking this chapter to its parent story
+  @Index
   @AllowNull(false)
   @ForeignKey(() => Story)
   @Column(DataType.UUID)
@@ -31,11 +33,6 @@ export class Chapter extends Model {
   @AllowNull(false)
   @Column(DataType.STRING)
   declare title: string;
-
-  // TipTap rich text document stored as JSONB — null until the user writes something
-  @AllowNull(true)
-  @Column(DataType.JSONB)
-  declare content: object | null;
 
   // Integer position used for sidebar ordering; updated on drag-and-drop reorder
   @Default(0)

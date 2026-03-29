@@ -2,18 +2,25 @@
 // characterAId and characterBId are ordered by convention (A is the "source").
 import {
   Table, Column, Model, PrimaryKey, Default, AllowNull,
-  DataType, ForeignKey, BelongsTo,
+  DataType, ForeignKey, BelongsTo, Index,
 } from 'sequelize-typescript';
 import { Story } from './Story';
 import { Character } from './Character';
 
-@Table({ tableName: 'character_relationships', timestamps: true })
+@Table({
+  tableName: 'character_relationships',
+  timestamps: true,
+  indexes: [
+    { unique: true, fields: ['characterAId', 'characterBId', 'type'] },
+  ],
+})
 export class CharacterRelationship extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
   declare id: string;
 
+  @Index
   @AllowNull(false)
   @ForeignKey(() => Story)
   @Column(DataType.UUID)

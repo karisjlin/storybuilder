@@ -2,7 +2,7 @@
 // Categories map to distinct world-building concerns (places, lore, objects, groups, etc.).
 import {
   Table, Column, Model, PrimaryKey, Default, AllowNull,
-  DataType, ForeignKey, BelongsTo,
+  DataType, ForeignKey, BelongsTo, Index,
 } from 'sequelize-typescript';
 import { Story } from './Story';
 
@@ -15,6 +15,7 @@ export class WorldEntry extends Model {
   @Column(DataType.UUID)
   declare id: string;
 
+  @Index
   @AllowNull(false)
   @ForeignKey(() => Story)
   @Column(DataType.UUID)
