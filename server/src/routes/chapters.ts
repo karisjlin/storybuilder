@@ -62,7 +62,6 @@ router.post('/', authenticate, async (req: Request, res: Response): Promise<void
     const chapter = await Chapter.create({
       storyId: req.params.storyId,
       title,
-      content: null,
       order: typeof maxOrder === 'number' ? maxOrder + 1 : 0,
       status: 'todo',
       wordCount: 0,
