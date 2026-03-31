@@ -114,14 +114,14 @@ export default router;
 
 export const sceneRouter = Router();
 
-async function verifySceneOwnership(id: string, userId: string): Promise<Scene | null> {
+async function verifySceneOwnership(id: string, userId: string): Promise<(Scene & { storyId: string }) | null> {
   const scene = await Scene.findByPk(id);
   if (!scene) return null;
   const chapter = await Chapter.findByPk(scene.chapterId);
   if (!chapter) return null;
   const story = await Story.findByPk(chapter.storyId);
   if (!story || story.userId !== userId) return null;
-  return scene;
+  return Object.assign(scene, { storyId: story.id });
 }
 
 // Helper: re-fetch a scene with its associations for a consistent response shape
@@ -182,6 +182,12 @@ sceneRouter.post('/:id/characters/:characterId', authenticate, async (req: Reque
     const scene = await verifySceneOwnership(req.params.id, req.user!.id);
     if (!scene) { res.status(404).json({ error: 'Scene not found' }); return; }
 
+    const character = await Character.findByPk(req.params.characterId);
+    if (!character || character.storyId !== scene.storyId) {
+      res.status(400).json({ error: 'Character does not belong to this story' });
+      return;
+    }
+
     // Avoid duplicate assignments
     const existing = await SceneCharacter.findOne({
       where: { sceneId: req.params.id, characterId: req.params.characterId },
@@ -217,6 +223,12 @@ sceneRouter.post('/:id/world/:worldEntryId', authenticate, async (req: Request, 
   try {
     const scene = await verifySceneOwnership(req.params.id, req.user!.id);
     if (!scene) { res.status(404).json({ error: 'Scene not found' }); return; }
+
+    const worldEntry = await WorldEntry.findByPk(req.params.worldEntryId);
+    if (!worldEntry || worldEntry.storyId !== scene.storyId) {
+      res.status(400).json({ error: 'World entry does not belong to this story' });
+      return;
+    }
 
     const existing = await SceneWorldEntry.findOne({
       where: { sceneId: req.params.id, worldEntryId: req.params.worldEntryId },
